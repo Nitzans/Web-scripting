@@ -12,8 +12,7 @@ browser = webdriver.Chrome()
 browser.get('https://bgu4u.bgu.ac.il/pls/scwp/!app.gate?app=ann')
 time.sleep(1)  # Wait for page to be loaded
 
-element = WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.XPATH, "//frame[@name='main']")))
-browser.switch_to.frame(element)
+browser.switch_to.frame(0)
 browser.find_elements_by_xpath("//a[@href='javascript:goType(1)']")[0].click()
 # browser.switch_to_frame(0)
 

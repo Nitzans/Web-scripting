@@ -41,26 +41,29 @@ def money():
 chrome_options = webdriver.ChromeOptions()
 chrome_options.add_argument("--incognito")
 browser = webdriver.Chrome(chrome_options=chrome_options)
-browser.get('https://docs.google.com/forms/d/e/1FAIpQLScZghfyFqyvu80S5U4YzyaXX-cnne-wV45RptRWaAL1i_qa0g/viewform')
-time.sleep(1)  # Wait for whole page to be loaded
+for i in range(1,50):
+    browser.get('https://docs.google.com/forms/d/e/1FAIpQLSdlTYZNyyTg1WeYgajskgXnH5wdfcv7ySN51qeDnR5sPZ5ilw/viewform?c=0&w=1')
+    time.sleep(1)  # Wait for whole page to be loaded
 
-''' Text Input '''
-textbox = browser.find_elements_by_xpath("//input[@type='text']")
-textbox[0].send_keys("None")                    # free text
-textbox[1].send_keys(money())                   # Money
-textbox[2].send_keys(name() + " " + fname())    # name + family name
-textbox[3].send_keys(age())                     # age
-textbox[4].send_keys(city())                    # city
-textbox[5].send_keys(phone())                   # phone
+    ''' Text Input '''
+    textbox = browser.find_elements_by_xpath("//input[@type='text']")
+    #textbox[].send_keys("None")                    # free text
+    #textbox[].send_keys(money())                   # Money
+    textbox[0].send_keys(name() + " " + fname())    # name + family name
+    textbox[2].send_keys(age())                     # age
+    textbox[3].send_keys(city())                    # city
+    textbox[1].send_keys(phone())                   # phone
 
-''' Choices '''
-choices = browser.find_elements_by_xpath("//input[@type='radio']")
-for c in choices:
-    c.click()  # marks all last options
+    ''' Choices '''
+    choices = browser.find_elements_by_xpath("//div[@role='radio']")
+    for c in choices:
+        c.click()  # marks all last options
 
-''' Submit '''
-#submit = browser.find_elements_by_xpath("//div[@role='button']")[1].click()
-#browser.close()
+    ''' Submit '''
+    browser.find_elements_by_xpath("//span[@class='quantumWizButtonPaperbuttonLabel exportLabel']")[0].click()
+    print i
+
+browser.close()
 
 """
 browser.find_element_by_class_name("ss-q-radio").click()  # single choice
