@@ -36,11 +36,6 @@ def textbox(title, field1, field2, field3, opt):
 
 logInfo = textbox("Login", "Username", "Password", "ID number", 0)
 username, password, idNum = logInfo[0], logInfo[1], logInfo[2]
-'''
-username = "shpigeln" #raw_input("Username: ")
-password = "shpigeL5" #raw_input("Password: ")
-idNum = "305388746" #raw_input("ID number: ")
-'''
 
 browser = webdriver.Chrome()
 browser.get('https://bgu4u.bgu.ac.il/pls/apex/f?p=104:101:2258666703108:::::')
