@@ -1,5 +1,5 @@
 # coding=utf-8
-""" Getting information about courses """
+""" Getting information about courses at Ben-Gurion university """
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
