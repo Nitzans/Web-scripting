@@ -1,6 +1,6 @@
 # Browsers-automation
-Some automation webpages scripts I created with Selenium.
-Most of them for personal use, but you might find them usful also for you.
+A mix of webpages automation scripts I created with Selenium, some of them are really basic and some are more advanced.
+I created them for personal use, but you might find them usful also for you.
 
 To use those scripts you have to:
 1. Install Python 3.7+
