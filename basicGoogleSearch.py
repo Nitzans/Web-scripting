@@ -20,14 +20,6 @@ page_results = browser.find_elements(By.XPATH, "//div/h3/a")  # Find all element
 for link in page_results:
     print (link.text)
     print (link.get_attribute("href"))  # The link inside 'a' is 'href'
-    print "\n"
-
-"""
-browser.get(page_results[0].get_attribute("href"))  # Enter the first result
-browser.maximize_window()
-browser.save_screenshot('screenshot.png')
-"""
-
-#  browser.execute_script("var a = prompt('Enter word', 'Write Here'); document.body.setAttribute('data-id', a)")
+    print ("\n")
 
 browser.quit()

@@ -44,7 +44,7 @@ browser.get('https://bgu4u.bgu.ac.il/pls/apex/f?p=104:101:2258666703108:::::')
 try:
     WebDriverWait(browser, 60).until(ec.presence_of_element_located((By.XPATH, "//form[@id='wwvFlowForm']")))
 except TimeoutException:
-    print "Timed out waiting for page to load"
+    print("Timed out waiting for page to load")
 
 browser.find_element_by_xpath("//input[@name='p_t01']").send_keys(username)     # username
 browser.find_element_by_xpath("//input[@name='p_t02']").send_keys(password)     # password
@@ -73,7 +73,7 @@ while go:
     else:
         browser.back()
 browser.close()
-print "GoodBye!"
+print("GoodBye!")
 =======
 # coding=utf-8
 """ Getting statistics and distributions about any course """
@@ -119,7 +119,7 @@ browser.get('https://bgu4u.bgu.ac.il/pls/apex/f?p=104:101:2258666703108:::::')
 try:
     WebDriverWait(browser, 60).until(ec.presence_of_element_located((By.XPATH, "//form[@id='wwvFlowForm']")))
 except TimeoutException:
-    print "Timed out waiting for page to load"
+    print("Timed out waiting for page to load")
 
 browser.find_element_by_xpath("//input[@name='p_t01']").send_keys(username)     # username
 browser.find_element_by_xpath("//input[@name='p_t02']").send_keys(password)     # password

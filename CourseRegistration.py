@@ -23,7 +23,7 @@ browser.switch_to.frame(main_frame)
 try:
     WebDriverWait(browser, 120).until(ec.presence_of_element_located((By.ID, "mainForm")))
 except TimeoutException:
-    print "Timed out waiting for page to load"
+    print("Timed out waiting for page to load")
 
 browser.find_elements_by_xpath("//input[@name='oc_username']")[0].send_keys("shpigeln")     # username
 browser.find_elements_by_xpath("//input[@name='oc_password']")[0].send_keys("shpigeL5")     # password
@@ -53,7 +53,7 @@ while int(slots) == 0:  # try to register till a slot is available
     WebDriverWait(browser, 10).until(ec.presence_of_element_located((By.XPATH, "//tr/td[@class='BlackText']")))
     slots = browser.find_elements_by_xpath("//tr/td[@class='BlackText']")[2].text
     if int(slots) > 0:
-        print "IOT"
+        print("Found slots for IOT course")
         break
     time.sleep(0.5)
     '''
@@ -72,7 +72,7 @@ while int(slots) == 0:  # try to register till a slot is available
         WebDriverWait(browser, 10).until(ec.presence_of_element_located((By.XPATH, "//img[@src='/images/images-search/icon-search.gif']")))
         browser.find_elements_by_xpath("//img[@src='/images/images-search/icon-search.gif']")[0].click()  # search button
     except TimeoutException:
-        print "Didn't find search button"
+        print("Didn't find search button")
         browser.find_element_by_tag_name("body").send_keys(Keys.ALT + Keys.ARROW_LEFT)
         browser.find_elements_by_xpath("//img[@src='/images/images-search/icon-search.gif']")[0].click()  # search button
     time.sleep(2)
@@ -80,10 +80,10 @@ while int(slots) == 0:  # try to register till a slot is available
         WebDriverWait(browser, 10).until(ec.presence_of_element_located((By.XPATH, "//tr/td[@class='BlackText']")))
         slots = browser.find_elements_by_xpath("//tr/td[@class='BlackText']")[2].text
     except TimeoutException:
-        print "Didn't find available slots"
+        print("Didn't find available slots")
         browser.find_element_by_tag_name("body").send_keys(Keys.ALT+Keys.ARROW_LEFT)
     if int(slots) > 0:
-        print "DB"
+        print("Found slots for DB course")
         break
 
 browser.find_elements_by_xpath('//a[@href="javascript:setFormActionAndSubmitOfSearchList(\'' + cID + '\',\'0\',\'' + cDept + '\',\'' + cDeg + '\')"]')[0].click()
@@ -92,9 +92,9 @@ for l in lecture:
     l.click()
 # browser.find_elements_by_xpath("//input[@type='radio'][@name='Set1_2']")[0].click()  # mark practice
 browser.find_elements_by_xpath('//img[@src="/images/icon-send.gif"]')[0].click()  # add course
-print "YYYYEEEEEESSSSSSS!!!!!!!"
+print "YYYYEEEESSSSS!!!!!!!"
 print time.asctime()
 MessageBox = ctypes.windll.user32.MessageBoxA
-MessageBox(None, 'Registration succeeded!', 'YEEEESSSS!!!!', 0)
+MessageBox(None, 'Registration succeeded!', 'Success!!!!', 0)
 
 

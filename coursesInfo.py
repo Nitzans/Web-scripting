@@ -28,12 +28,12 @@ for i in range(0, len(course_list)):
     source = browser.page_source
     if u"מדעי המחשב" in source:
         counter += 1
-        print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  Course Number: " + str(counter) + "  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  Course Number: " + str(counter) + "  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         info = browser.find_element_by_xpath("//ul[@class='props']")
         category = info.find_elements_by_xpath("//p[@class='key']")
         values = info.find_elements_by_xpath("//p[@class='val']")
         for j in range(0, len(values)):
-            print "*" + str(category[j].text.encode('utf-8')) + str(values[j].text.encode('utf-8'))
-        print "\n"
+            print("*" + str(category[j].text.encode('utf-8')) + str(values[j].text.encode('utf-8')))
+        print("\n")
     browser.find_elements_by_xpath("//img[@name='buttonBack']")[0].click()  # go back
     course_list = browser.find_elements_by_xpath("//td[@class='SearchFormTextBold']/a")  # restore list
