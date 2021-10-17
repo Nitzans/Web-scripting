@@ -7,8 +7,8 @@ from tkinter import messagebox
 PLACE_NAME = 'ויקטורי - רמת גן'
 COUPON_VALUE = 30
 DAILY_BUDGET = 30
-USER_NAME = 'nitzan.shpigel@philips.com'
-PASSWORD = 'Nizans1!'
+USER_NAME = 'user_name'
+PASSWORD = 'password'
 
 web = Browser(True)  # When false - browser window will be hidden
 
@@ -42,6 +42,7 @@ try:
     # Sometimes, this search opens a pop-up, so we need to return the original tab
     if web.get_total_tabs() > 1:
         web.switch_to_tab(1)
+	sleep(0.5)
     web.click(PLACE_NAME, tag='th', classname='ellipsis')
 
     ''' Complete order '''
@@ -58,5 +59,5 @@ except BaseException:
 ''' Finishing '''
 print("Finished!")
 messagebox.showinfo("Success", "Check email to verify the charge was done")
-sleep(7)
+sleep(5)
 web.driver.quit()
