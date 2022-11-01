@@ -14,6 +14,7 @@ from selenium.webdriver.support import expected_conditions as cond
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+from tqdm import tqdm
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 USERNAME = "borozoz12@gmail.com"
@@ -25,7 +26,7 @@ def main():
     season_input = int(input("Please enter the requested season number: \n"))
     episode_input = int(input("Please enter the first episode to be downloaded: \n"))
     all_input = input("Do you want to download all other episodes, starting of the selected episode? (Yes/No)\n")
-    download_all = True if all_input.upper() == "YES" else False
+    download_all = True if all_input.upper().startswith('Y') else False
 
     # executable_path = "C:\\Users\\User\\Desktop\\Sdarot script\\chromedriver.exe"
     # os.environ["webdriver.chrome.driver"] = executable_path
@@ -53,7 +54,6 @@ def download_series(browser, base_url, season, episode, download_all):
         episode_available = is_episode_available(browser, full_url)
         if episode_available:
             get_episode(browser, episode)
-
         else:
             print("Error loading episode " + str(episode) + ", skipping it...")
         if not download_all:
@@ -79,11 +79,11 @@ def is_episode_available(browser, full_url):
             err_msg = browser.find_element("xpath", "//h3[contains(.,'שגיאה 2!')]")
             if err_msg.text == "שגיאה 2!":
                 attempts -= 1
-                print(f"Busy servers, will try again...")
+                print(f"Servers are busy, will try again...")
                 continue
         break
     if ready:
-        print("Episode is ready")
+        print("Episode is available")
     return ready
 
 
@@ -99,21 +99,27 @@ def get_episode(browser, episode):
     s = requests.Session()
     for cookie in cookies:
         s.cookies.set(cookie['name'], cookie['value'])
+    head = s.head(video_src)
+    file_size = int(head.headers["Content-Length"])
     response = s.get(video_src, stream=True)
     if response.status_code == 200:
-        print(f"Start downloading episode {episode}. "
-              f"It might take a while and no progress will be visible until download is completed.")
-        with open(f'{DOWNLOAD_PATH}\\{episode}.mp4', 'wb') as f:
-            f.write(response.content)
-        # browser.execute_script("window.open('" + video_src + "')")
+        print(f"Start downloading episode {episode}, it might take a while...")
+              
+        with tqdm.wrapattr(open(f'{DOWNLOAD_PATH}\\{episode}.mp4', 'wb'), "write",
+                   miniters=1, desc=str(episode),
+                   total=file_size) as fout:
+            for chunk in response:
+                fout.write(chunk)
+        print(f"Episode {episode} was downloaded successfully")
     else:
         print(f"Video url for episode {episode} is not accessible, skipping it")
 
 
 def login(browser, username, password):
     print("Logging...")
+    browser.implicitly_wait(15)
     browser.find_element("xpath", "//button[@data-target='#loginForm']").click()
-    browser.implicitly_wait(3)
+    browser.implicitly_wait(5)
     browser.find_element("xpath", "//input[@name='username']").send_keys(username)
     browser.find_element("xpath", "//input[@name='password']").send_keys(password)
     browser.find_element("xpath", "//button[@name='submit_login']").click()
