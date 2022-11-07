@@ -17,46 +17,51 @@ from webdriver_manager.chrome import ChromeDriverManager
 from tqdm import tqdm
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-USERNAME = "borozoz12@gmail.com"
-PASSWORD = "zozorob"
-DOWNLOAD_PATH = "C:\\Users\\User\\Downloads"
+USERNAME = "username"
+PASSWORD = "pass"
+TARGET_PATH = "C:\\Users\\User\\Downloads"
 
 def main():
     url_input = input("Please enter the url of the series, without the season or episode: \n")
     season_input = int(input("Please enter the requested season number: \n"))
     episode_input = int(input("Please enter the first episode to be downloaded: \n"))
     all_input = input("Do you want to download all other episodes, starting of the selected episode? (Yes/No)\n")
-    download_all = True if all_input.upper().startswith('Y') else False
+    all_episodes = True if all_input.upper().startswith('Y') else False
 
-    # executable_path = "C:\\Users\\User\\Desktop\\Sdarot script\\chromedriver.exe"
-    # os.environ["webdriver.chrome.driver"] = executable_path
+    global browser
     chrome_options = Options()
     chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
-    # chrome_options.add_extension('C:\\Users\\user\\PycharmProjects\\WebScripting\\Flash Video Downloader.crx')
-    # browser = webdriver.Chrome(executable_path=executable_path, options=chrome_options)
     browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-    download_series(browser, url_input, season_input, episode_input, download_all)
+    get_series(url_input, season_input, episode_input, all_episodes)
 
 
-def download_series(browser, base_url, season, episode, download_all):
-    if download_all:
+def get_series(base_url, season, episode, all_episodes):
+    if all_episodes:
         print(f"Selected all episodes in season {season}, starting of episode {episode}...")
     else:
         print("Selected single episode " + str(episode) + "...")
 
     full_url = base_url + '/season/' + str(season) + '/episode/' + str(episode)
     browser.get(full_url)
-  
+    
+    series_name = browser.find_element("xpath", "//span[@class='ltr']").text
+    series_name = series_name.replace(':','-').replace('?',' ').replace('\"','\'')
+    global dir_name
+    dir_name = TARGET_PATH + "\\" + series_name
+    if not os.path.exists(dir_name):
+        os.makedirs(dir_name)
+        
     episodes_list = browser.find_elements("xpath", "//ul[contains(@id,'episode')]/li")
-    login(browser, USERNAME, PASSWORD)
+    login(USERNAME, PASSWORD)
     while episode <= len(episodes_list):
         full_url = base_url + '/season/' + str(season) + '/episode/' + str(episode)  # with the next episode
-        episode_available = is_episode_available(browser, full_url)
+        episode_available = is_episode_available(full_url)
         if episode_available:
-            get_episode(browser, episode)
+            get_episode(episode)
         else:
-            print("Error loading episode " + str(episode) + ", skipping it...")
-        if not download_all:
+            print("Too many attempts without a success, stop downloading.")
+            return
+        if not all_episodes:
             break
         time.sleep(1)
         episode = episode + 1
@@ -66,14 +71,13 @@ def download_series(browser, base_url, season, episode, download_all):
     print("Done! If no other active downloads, you may close the browser")
 
 
-def is_episode_available(browser, full_url):
+def is_episode_available(full_url):
     attempts = 5
     ready = False
     while attempts > 0:
         browser.get(full_url)
         try:
-            WebDriverWait(browser, 40).until(
-                cond.element_to_be_clickable((By.XPATH, "//span[contains(.,'נגן את הפרק')]"))).click()
+            WebDriverWait(browser, 40).until(cond.element_to_be_clickable(("xpath", "//span[contains(.,'נגן את הפרק')]"))).click()
             ready = True
         except TimeoutException:
             err_msg = browser.find_element("xpath", "//h3[contains(.,'שגיאה 2!')]")
@@ -87,14 +91,18 @@ def is_episode_available(browser, full_url):
     return ready
 
 
-def get_episode(browser, episode):
+def get_episode(episode):
     time.sleep(2)
     video_src = browser.find_elements(By.TAG_NAME, "video")[0].get_attribute("src")
     if not video_src or video_src == "":
         print("Probably encountered an ad, will try again when it will be finished")
         time.sleep(33)
         video_src = browser.find_elements(By.TAG_NAME, "video")[0].get_attribute("src")
+    send_request(video_src, episode)
 
+
+
+def send_request(video_src, episode):
     cookies = browser.get_cookies()
     s = requests.Session()
     for cookie in cookies:
@@ -103,24 +111,26 @@ def get_episode(browser, episode):
     file_size = int(head.headers["Content-Length"])
     response = s.get(video_src, stream=True)
     if response.status_code == 200:
-        print(f"Start downloading episode {episode}, it might take a while...")
-              
-        with tqdm.wrapattr(open(f'{DOWNLOAD_PATH}\\{episode}.mp4', 'wb'), "write",
-                   miniters=1, desc=str(episode),
-                   total=file_size) as fout:
-            for chunk in response:
-                fout.write(chunk)
-        print(f"Episode {episode} was downloaded successfully")
+        download(response, episode, file_size)
     else:
         print(f"Video url for episode {episode} is not accessible, skipping it")
 
 
-def login(browser, username, password):
+def download(response, episode, file_size):
+    print(f"Start downloading episode {episode}, it might take a while...")
+    with tqdm.wrapattr(open(f'{dir_name}\\{episode}.mp4', 'wb'), "write",
+               miniters=1, desc=str(episode), total=file_size) as fout:
+        for chunk in response:
+            fout.write(chunk)
+    print(f"Episode {episode} was downloaded successfully")
+
+
+def login(username, password):
     print("Logging...")
-    browser.implicitly_wait(15)
-    browser.find_element("xpath", "//button[@data-target='#loginForm']").click()
-    browser.implicitly_wait(5)
-    browser.find_element("xpath", "//input[@name='username']").send_keys(username)
+    WebDriverWait(browser, 10).until(cond.element_to_be_clickable(("xpath", "//button[@data-target='#loginForm']"))).click()
+    #browser.find_element("xpath", "//button[@data-target='#loginForm']").click()
+    WebDriverWait(browser, 10).until(cond.element_to_be_clickable(("xpath", "//input[@name='username']"))).send_keys(username)
+    #browser.find_element("xpath", "//input[@name='username']").send_keys(username)
     browser.find_element("xpath", "//input[@name='password']").send_keys(password)
     browser.find_element("xpath", "//button[@name='submit_login']").click()
     print("Logged in successfully")
