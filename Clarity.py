@@ -1,5 +1,4 @@
 import os
-import platform
 import subprocess
 import time
 import sys
@@ -11,6 +10,8 @@ import requests
 import zipfile
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -151,7 +152,7 @@ def login(user_email, password):
     except TimeoutException:
         logging.error("Timeout error: Microsoft login page wasn't loaded for too much time")
         return False
-    submit_next = browser.find_element_by_xpath("//*[@id='i0116']")
+    submit_next = browser.find_element(by=By.XPATH, value="//*[@id='i0116']")
     submit_next.send_keys(user_email)
     submit_next.send_keys(Keys.ENTER)
 
@@ -162,10 +163,10 @@ def login(user_email, password):
         logging.error("Timeout error: Microsoft password page wasn't loaded for too much time")
         return False
 
-    pass_label = browser.find_element_by_xpath("//*[@id='i0118']")
+    pass_label = browser.find_element(by=By.XPATH, value="//*[@id='i0118']")
     pass_label.send_keys(password)
     time.sleep(2)  # This delay is because sometimes the sign button takes time to be visible
-    sign = browser.find_element_by_xpath("//input[@type='submit']")
+    sign = browser.find_element(by=By.XPATH, value="//input[@type='submit']")
     time.sleep(1)
     if not sign.is_displayed():
         logging.error("Sign button is not displayable. Probably didn't wait enough time before clicking.")
@@ -187,13 +188,13 @@ def login(user_email, password):
 def fill_task(task_name, work_days):
     logging.info("Start filling task " + task_name)
     # Click edit timesheet
-    browser.find_element_by_xpath("//*[@id='timeadmin.editTimesheet']").click()
+    browser.find_element(by=By.XPATH, value="//*[@id='timeadmin.editTimesheet']").click()
     try:
         WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.XPATH, "//*[@id='ppm-portlet-grid-content-timeadmin.editTimesheet']/div/button")))
     except TimeoutException:
         logging.error("Didn't find 'edit timesheet' button")
         return False
-    browser.find_element_by_xpath("//*[@id='ppm-portlet-grid-content-timeadmin.editTimesheet']/div/button").click()
+    browser.find_element(by=By.XPATH, value="//*[@id='ppm-portlet-grid-content-timeadmin.editTimesheet']/div/button").click()
 
     # Find relevant task from list
     try:
@@ -202,7 +203,7 @@ def fill_task(task_name, work_days):
     except TimeoutException:
         logging.error("Didn't find add task button")
         return False
-    all_tasks = browser.find_elements_by_xpath("//tbody[@class='ppm_grid_content']/tr")
+    all_tasks = browser.find_elements(by=By.XPATH, value="//tbody[@class='ppm_grid_content']/tr")
     task_mapping = {}
     for task_item in all_tasks:
         task_mapping[task_item.find_elements_by_tag_name("td")[3].text] = task_item.find_elements_by_tag_name("td")
@@ -216,7 +217,7 @@ def fill_task(task_name, work_days):
         logging.info("You selected task: {}".format(new_task.chosen_task))
         task_mapping[new_task.chosen_task][0].click()
     # Select the task
-    browser.find_element_by_xpath("//*[@id='ppm-portlet-grid-content-timeadmin.selectTimesheetTask']/div/button[1]").click()
+    browser.find_element(by=By.XPATH, value="//*[@id='ppm-portlet-grid-content-timeadmin.selectTimesheetTask']/div/button[1]").click()
 
     try:
         WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.ID, "portlet-table-timeadmin.editTimesheet")))
@@ -225,7 +226,7 @@ def fill_task(task_name, work_days):
         return False
 
     # Fill hours
-    days_div = browser.find_elements_by_xpath("//tbody[@class='ppm_list_content']/tr[2]/td/input[@type='text'][@class='ppm_field formFieldNoWidth']")[:-2]  # remove the total days column
+    days_div = browser.find_elements(by=By.XPATH, value="//tbody[@class='ppm_list_content']/tr[2]/td/input[@type='text'][@class='ppm_field formFieldNoWidth']")[:-2]  # remove the total days column
     for d in days_div:
         day_name = d.get_attribute("title")[:3]
         if day_name in work_days:
@@ -234,10 +235,10 @@ def fill_task(task_name, work_days):
         else:
             d.send_keys("")  # If you reached here it means the title format was changed
 
-    browser.find_elements_by_xpath("//*/button[@class='ppm_button button']")[0].click()  # Save
+    browser.find_elements(by=By.XPATH, value="//*/button[@class='ppm_button button']")[0].click()  # Save
     logging.debug("Task was saved")
     time.sleep(3)
-    browser.find_elements_by_xpath("//*/button[@class='ppm_button button']")[1].click() # Submit
+    browser.find_elements(by=By.XPATH, value="//*/button[@class='ppm_button button']")[1].click()  # Submit
     logging.debug("Task was submitted")
 
     # Verify completion and return to home page
@@ -248,7 +249,7 @@ def fill_task(task_name, work_days):
         return False
     logging.info("Task {} was submitted successfully".format(task_name))
 
-    browser.find_element_by_xpath("//button[@id='ppm_home_go']").click()  # go to home page
+    browser.find_element(by=By.XPATH, value="//button[@id='ppm_home_go']").click()  # go to home page
     return True
 
 
@@ -367,6 +368,7 @@ def main(user_email, password, task_name, work_days):
     chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
     chrome_options.headless = False  # Console windows
     global browser
+    """
     try:
         base_path = sys._MEIPASS
     except Exception:
@@ -375,9 +377,10 @@ def main(user_email, password, task_name, work_days):
     if not is_updated:
         return False
     chrome_path = os.path.join(base_path, 'driver/chromedriver.exe')
-
+    """
     try:
-        browser = webdriver.Chrome(executable_path=chrome_path, options=chrome_options)
+        print("Checking if driver need to be updated...")
+        browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
     except BaseException as e:
         logging.error("Failed to initialize browser, due to the following error: " + str(e))
     if browser is None:
