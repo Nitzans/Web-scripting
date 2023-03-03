@@ -1,8 +1,10 @@
 import os
 import sys
 import time
+from tkinter import filedialog
 
 import requests
+
 from os import path
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
@@ -14,7 +16,6 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from tqdm import tqdm
 import tkinter as tk
-from tkinter import filedialog
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 USERNAME = "USERNAME"
@@ -55,6 +56,7 @@ class StartWindow:
         path_entry = tk.Entry(self.root, textvariable=self.target_path, width=30)
         path_entry.place(x=30, y=110, width=290, height=25)
         tk.Button(self.root, text="...", command=lambda: self.browse(path_entry)).place(x=320, y=110, width=20, height=25)
+        self.target_path = self.target_path.get()
 
         # Run
         tk.Button(self.root, text='Run', command=self.submit).place(x=150, y=150, width=30, height=30)
@@ -64,12 +66,10 @@ class StartWindow:
         self.root.destroy()
 
     def browse(self, path_entry):
-        target_path = filedialog.askdirectory(initialdir=DEFAULT_TARGET_PATH)
+        target_path = filedialog.askdirectory(initialdir=self.target_path)
         self.target_path = target_path
         path_entry.delete(0, len(path_entry.get()))
         path_entry.insert(0, target_path)
-        dir_name = path_entry.get()
-        print("Destination path is: " + dir_name)
 
 
 def is_episode_available(full_url):
@@ -119,7 +119,7 @@ def send_request(video_src, episode):
 
 def download(response, episode, file_size):
     print(f"Start downloading episode {episode}, it might take a while...")
-    with tqdm.wrapattr(open(f'{dir_name}\\{episode}.mp4', 'wb'), "write",
+    with tqdm.wrapattr(open(f'{full_path}/{episode}.mp4', 'wb'), "write",
                        miniters=1, desc=str(episode), total=file_size) as fout:
         for chunk in response:
             fout.write(chunk)
@@ -134,29 +134,31 @@ def start_browser():
     browser.get(BASE_URL)
 
 
-def main(series_name, season_number, episode_number, all_episodes):
+def main(series_name, season_number, episode_number, all_episodes, folder_path):
     if all_episodes:
         print(f"Selected all episodes in season {season_number}, starting of episode {episode_number}...")
     else:
         print("Selected single episode " + episode_number + "...")
-    print("Destination path is: " + dir_name)
+
     query_search = "/search?term="
     series_url = BASE_URL + query_search + series_name
-    browser.get(BASE_URL + query_search + series_name)
+    browser.get(series_url)
     series_url = browser.current_url.rstrip('/')
     full_url = series_url + '/season/' + season_number + '/episode/' + episode_number
     browser.get(full_url)
-    # series_name = browser.find_element("xpath", "//span[@class='ltr']").text
-    # series_name = series_name.replace(':', '-').replace('?', ' ').replace('\"', '\'')
-    global dir_name
-    dir_name = DEFAULT_TARGET_PATH + "\\" + series_name
-    if not os.path.exists(dir_name):
-        os.makedirs(dir_name)
+    # series_name = browser.find_element("xpath", "//span[@class='ltr']").text  # Find series name from series page
+    # series_name = series_name.replace(':', '-').replace('?', ' ').replace('\"', '\'')  # remove illegal characters
+
+    global full_path
+    full_path = folder_path + "/" + series_name
+    print("Destination path is: " + full_path)
+    if not os.path.exists(full_path):
+        os.makedirs(full_path)
 
     episodes_list = browser.find_elements("xpath", "//ul[contains(@id,'episode')]/li")
     episode_number = int(episode_number)
     while episode_number <= len(episodes_list):
-        full_url = series_url + '/season/' + str(season_number) + '/episode/' + str(episode_number)  # with the next episode
+        full_url = series_url + '/season/' + str(season_number) + '/episode/' + str(episode_number)  # the next episode
         episode_available = is_episode_available(full_url)
         if episode_available:
             get_episode(episode_number)
@@ -193,9 +195,10 @@ if __name__ == '__main__':
     season_output = app.season_var.get()
     episode_output = app.episode_var.get()
     get_all = app.all_var.get()
+    folder = app.target_path
 
     start_browser()
     login(USERNAME, PASSWORD)
-    main(series_output, season_output, episode_output, get_all)
+    main(series_output, season_output, episode_output, get_all, folder)
 
 
