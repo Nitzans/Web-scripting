@@ -77,9 +77,12 @@ def is_episode_available(full_url):
     ready = False
     while attempts > 0:
         browser.get(full_url)
+        for i in range(29, -1, -1):
+            for j in range(9, -1, -1):
+                time.sleep(0.1)
+                print(f"Wait {i}.{j} seconds ", end="\r")
         try:
-            WebDriverWait(browser, 40).until(
-                cond.element_to_be_clickable(("xpath", "//span[contains(.,'נגן את הפרק')]"))).click()
+            WebDriverWait(browser, 40).until(cond.element_to_be_clickable(("xpath", "//span[contains(.,'נגן את הפרק')]"))).click()
             ready = True
         except TimeoutException:
             err_msg = browser.find_element("xpath", "//h3[contains(.,'שגיאה 2!')]")
@@ -98,7 +101,11 @@ def get_episode(episode):
     video_src = browser.find_elements(By.TAG_NAME, "video")[0].get_attribute("src")
     if not video_src or video_src == "":
         print("Probably encountered an ad, will try again in 30 seconds when it will be finished")
-        time.sleep(33)
+        time.sleep(2)
+        for i in range(29, -1, -1):
+            for j in range(9, -1, -1):
+                time.sleep(0.1)
+                print(f"Wait {i}.{j} seconds ", end="\r")
         video_src = browser.find_elements(By.TAG_NAME, "video")[0].get_attribute("src")
     send_request(video_src, episode)
 
@@ -129,6 +136,7 @@ def download(response, episode, file_size):
 def start_browser():
     global browser
     chrome_options = Options()
+    #chrome_options.add_argument('headless')  # TODO: understand why it doesn't work
     chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
     browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
     browser.get(BASE_URL)
@@ -143,6 +151,9 @@ def main(series_name, season_number, episode_number, all_episodes, folder_path):
     query_search = "/search?term="
     series_url = BASE_URL + query_search + series_name
     browser.get(series_url)
+    if len(browser.find_elements(By.XPATH, "//p[contains(.,'לא נמצאו תוצאות ""')]")) > 0:
+        print(f"Did not find a series named \"{series_name}\".Please use the exact series name")
+        return
     series_url = browser.current_url.rstrip('/')
     full_url = series_url + '/season/' + season_number + '/episode/' + episode_number
     browser.get(full_url)
@@ -150,7 +161,7 @@ def main(series_name, season_number, episode_number, all_episodes, folder_path):
     # series_name = series_name.replace(':', '-').replace('?', ' ').replace('\"', '\'')  # remove illegal characters
 
     global full_path
-    full_path = folder_path + "/" + series_name
+    full_path = folder_path + "\\" + series_name
     print("Destination path is: " + full_path)
     if not os.path.exists(full_path):
         os.makedirs(full_path)
@@ -171,7 +182,7 @@ def main(series_name, season_number, episode_number, all_episodes, folder_path):
         episode_number = episode_number + 1
         browser.execute_script("window.open('" + series_url + '/season/' + str(season_number) + "')")
         browser.switch_to.window(browser.window_handles[-1])
-
+    browser.quit()
     print("Done! If no other active downloads, you may close the browser")
 
 
